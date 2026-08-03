@@ -808,7 +808,7 @@ async function commitTransaction(){
 document.getElementById("camToggleBtn").addEventListener("click", startCamera);
 document.getElementById("camStopBtn").addEventListener("click", stopCamera);
 
-let lastScanAttempt = 0;
+let lastScanAttempt = 0, lastHeartbeat = 0, camStartTs = 0, scanAttemptCount = 0;
 
 async function startCamera(){
   const camWrap = document.getElementById("camWrap");
@@ -868,6 +868,8 @@ async function startCamera(){
   try{ await video.play(); }catch(e){ console.warn("video.play() gagal", e); }
   statusEl.textContent = "Arahkan kamera ke kode QR pada kartu donatur…";
   camScanning = true;
+  camStartTs = performance.now();
+  scanAttemptCount = 0;
   requestAnimationFrame(scanLoop);
 }
 function stopCamera(){
@@ -880,16 +882,17 @@ function stopCamera(){
 }
 function scanLoop(ts){
   if(!camScanning) return;
-  if(!lastScanAttempt || ts - lastScanAttempt > 120){
-    lastScanAttempt = ts;
-    const video = document.getElementById("camVideo");
-    if(video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0){
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      try{
+  try{
+    if(!lastScanAttempt || ts - lastScanAttempt > 100){
+      lastScanAttempt = ts;
+      scanAttemptCount++;
+      const video = document.getElementById("camVideo");
+      if(video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0){
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
         if(code && code.data){
@@ -898,10 +901,17 @@ function scanLoop(ts){
           doLookup();
           return;
         }
-      }catch(e){}
+      }
+      if(!lastHeartbeat || ts - lastHeartbeat > 1500){
+        lastHeartbeat = ts;
+        const secs = Math.round((ts - camStartTs) / 1000);
+        document.getElementById("camStatus").textContent = "Mencari kode QR… (" + secs + "s, " + scanAttemptCount + "x dicoba)";
+      }
     }
+  }catch(e){
+    console.warn("scanLoop error (diabaikan, lanjut mencoba)", e);
   }
-  requestAnimationFrame(scanLoop);
+  if(camScanning) requestAnimationFrame(scanLoop);
 }
 
 /* ============== LAPORAN / REPORTS ============== */
