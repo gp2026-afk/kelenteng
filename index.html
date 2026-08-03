@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Donasi Vihara</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root{
+  --maroon:#6B2438;
+  --maroon-dark:#4A1826;
+  --saffron:#D9A440;
+  --saffron-light:#F0D9A0;
+  --jade:#33564A;
+  --parchment:#F7F2E7;
+  --parchment-dark:#EDE4D0;
+  --ink:#2A2320;
+  --ink-soft:#7a6f65;
+  --danger:#A8432F;
+  --radius:16px;
+  --shadow:0 4px 16px rgba(42,35,32,0.14);
+  --font-display:'Fraunces',serif;
+  --font-body:'IBM Plex Sans',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--parchment);color:var(--ink);font-family:var(--font-body);-webkit-font-smoothing:antialiased;}
+#app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--parchment);position:relative;}
+
+/* ---- auth screen ---- */
+#authScreen{position:fixed;inset:0;background:linear-gradient(160deg,var(--maroon) 0%,var(--maroon-dark) 100%);display:flex;align-items:center;justify-content:center;padding:20px;z-index:200;}
+.auth-card{background:#fff;border-radius:20px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,0.3);}
+.auth-card .eyebrow2{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--saffron);text-align:center;}
+.auth-card h1{font-family:var(--font-display);font-weight:700;font-size:24px;text-align:center;color:var(--maroon-dark);margin:4px 0 4px;}
+.auth-card .sub2{text-align:center;font-size:13px;color:var(--ink-soft);margin-bottom:18px;}
+.auth-error{background:#FBEAE6;border:1px solid var(--danger);color:var(--danger);padding:10px 12px;border-radius:9px;font-size:13px;margin-bottom:10px;display:none;}
+.role-badge{display:inline-block;font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,0.15);color:var(--saffron-light);}
+
+/* ---- header ---- */
+.app-header{background:linear-gradient(160deg,var(--maroon) 0%,var(--maroon-dark) 100%);color:var(--parchment-dark);padding:22px 20px 26px;position:relative;overflow:hidden;}
+.app-header::after{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(217,164,64,0.18),transparent 70%);}
+.app-header .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--saffron-light);opacity:.85;}
+.app-header h1{font-family:var(--font-display);font-weight:700;font-size:26px;margin:4px 0 2px;line-height:1.15;}
+.app-header .sub{font-size:13px;color:rgba(247,242,231,0.75);}
+.header-actions{position:absolute;top:18px;right:16px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.header-actions .row-btns{display:flex;gap:6px;}
+.edit-name-btn,.logout-btn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:var(--parchment-dark);border-radius:8px;font-size:11px;padding:5px 9px;cursor:pointer;font-family:var(--font-body);}
+
+/* ---- tabs content ---- */
+.view{flex:1;padding:18px 18px 100px;}
+.hidden{display:none !important;}
+
+/* ---- cards / generic ---- */
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px;border:1px solid rgba(42,35,32,0.06);}
+.card h2{font-family:var(--font-display);font-size:19px;margin:0 0 12px;color:var(--maroon-dark);}
+.section-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px;}
+
+label{display:block;font-size:12.5px;color:var(--ink-soft);margin:10px 0 4px;font-weight:500;}
+input[type=text],input[type=number],input[type=date],input[type=month],input[type=password],textarea{
+  width:100%;padding:12px 13px;border:1.5px solid var(--parchment-dark);border-radius:10px;font-size:16px;font-family:var(--font-body);background:var(--parchment);color:var(--ink);transition:border-color .15s;
+}
+input:focus,textarea:focus{outline:none;border-color:var(--saffron);background:#fff;}
+input[type=number]{font-family:var(--font-mono);font-weight:600;}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:13px 18px;border-radius:11px;border:none;font-weight:600;font-size:15px;cursor:pointer;font-family:var(--font-body);transition:transform .1s, opacity .15s;width:100%;}
+.btn:active{transform:scale(0.98);}
+.btn-primary{background:var(--maroon);color:#fff;}
+.btn-primary:hover{background:var(--maroon-dark);}
+.btn-gold{background:var(--saffron);color:var(--maroon-dark);}
+.btn-ghost{background:transparent;color:var(--maroon);border:1.5px solid var(--maroon);}
+.btn-jade{background:var(--jade);color:#fff;}
+.btn-danger{background:transparent;color:var(--danger);border:1.5px solid var(--danger);}
+.btn-sm{padding:8px 12px;font-size:13px;width:auto;}
+.btn-row{display:flex;gap:10px;}
+.btn-row .btn{flex:1;}
+.btn[disabled]{opacity:.5;cursor:not-allowed;}
+
+/* ---- scan view ---- */
+.cam-primary-card{background:linear-gradient(150deg,var(--jade),#264238);border-radius:var(--radius);padding:18px;margin-bottom:16px;color:#fff;}
+.cam-primary-card .section-label{color:var(--saffron-light);opacity:.9;}
+.scan-input-wrap{position:relative;}
+.scan-input-wrap input{padding-right:44px;font-family:var(--font-mono);letter-spacing:.02em;}
+.hint{font-size:12px;color:var(--ink-soft);margin-top:8px;line-height:1.5;}
+.hint-light{font-size:12px;color:rgba(255,255,255,0.75);margin-top:8px;line-height:1.5;}
+.divider-or{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--ink-soft);font-size:12px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;}
+.divider-or::before,.divider-or::after{content:"";flex:1;height:1px;background:var(--parchment-dark);}
+video{width:100%;border-radius:12px;background:#000;display:block;}
+.cam-wrap{position:relative;border-radius:12px;overflow:hidden;margin-bottom:10px;}
+.cam-frame{position:absolute;inset:15% 20%;border:3px solid var(--saffron);border-radius:14px;box-shadow:0 0 0 2000px rgba(0,0,0,0.35);pointer-events:none;}
+.cam-status{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#fff;font-size:12px;font-family:var(--font-mono);text-shadow:0 1px 3px rgba(0,0,0,0.6);}
+
+.donor-hit{background:linear-gradient(135deg,var(--jade),#264238);color:#fff;border-radius:var(--radius);padding:18px;margin-bottom:16px;}
+.donor-hit .lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.7;}
+.donor-hit .name{font-family:var(--font-display);font-size:22px;font-weight:600;margin:2px 0 2px;}
+.donor-hit .idtag{font-family:var(--font-mono);font-size:12px;opacity:.75;}
+
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:var(--maroon-dark);color:#fff;padding:13px 20px;border-radius:12px;font-size:14px;box-shadow:var(--shadow);z-index:150;max-width:88%;text-align:center;animation:toastIn .25s ease-out;}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
+.error-box{background:#FBEAE6;border:1px solid var(--danger);color:var(--danger);padding:12px 14px;border-radius:10px;font-size:13.5px;margin-bottom:12px;}
+
+/* ---- donatur list ---- */
+.donor-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--parchment-dark);}
+.donor-row:last-child{border-bottom:none;}
+.donor-row .qmini{width:44px;height:44px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;}
+.donor-row .qmini img{width:100%;height:100%;}
+.donor-info{flex:1;min-width:0;}
+.donor-info .n{font-weight:600;font-size:15px;}
+.donor-info .i{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);}
+.search-box{margin-bottom:14px;}
+
+/* ---- report ---- */
+.toggle-group{display:flex;background:var(--parchment-dark);border-radius:11px;padding:4px;margin-bottom:14px;}
+.toggle-group button{flex:1;padding:9px;border:none;background:transparent;border-radius:8px;font-weight:600;font-size:13.5px;color:var(--ink-soft);cursor:pointer;font-family:var(--font-body);}
+.toggle-group button.active{background:#fff;color:var(--maroon);box-shadow:0 1px 4px rgba(0,0,0,0.1);}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.stat{background:var(--parchment-dark);border-radius:12px;padding:13px;}
+.stat .v{font-family:var(--font-mono);font-weight:700;font-size:19px;color:var(--maroon-dark);}
+.stat .l{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);padding:6px 4px;border-bottom:1.5px solid var(--parchment-dark);}
+td{padding:9px 4px;border-bottom:1px solid var(--parchment-dark);vertical-align:top;}
+.amt{font-family:var(--font-mono);font-weight:600;text-align:right;white-space:nowrap;}
+.empty-state{text-align:center;padding:36px 10px;color:var(--ink-soft);}
+.empty-state .glyph{font-size:34px;margin-bottom:8px;opacity:.5;}
+
+/* ---- printable donor card ---- */
+.print-card{border:1.5px dashed var(--maroon);border-radius:14px;padding:14px;text-align:center;background:#fff;position:relative;}
+.print-card .pname{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--maroon-dark);margin-bottom:2px;}
+.print-card .pid{font-family:var(--font-mono);font-size:10px;color:var(--ink-soft);margin-bottom:8px;}
+.print-card svg{max-width:100%;}
+.print-card .qrbox{margin-top:8px;display:flex;justify-content:center;}
+.print-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(42,35,32,0.55);display:flex;align-items:center;justify-content:center;z-index:80;padding:20px;}
+.modal-box{background:#fff;border-radius:var(--radius);padding:20px;max-width:340px;width:100%;max-height:85vh;overflow:auto;}
+
+/* ---- staff list rows ---- */
+.staff-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--parchment-dark);}
+.staff-row:last-child{border-bottom:none;}
+.staff-row .sn{font-weight:600;font-size:14.5px;}
+.staff-row .sd{font-size:11.5px;color:var(--ink-soft);}
+
+/* ---- bottom nav ---- */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;background:#fff;border-top:1px solid var(--parchment-dark);display:flex;box-shadow:0 -4px 14px rgba(0,0,0,0.06);z-index:40;}
+.bottom-nav button{flex:1;background:none;border:none;padding:11px 4px 9px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--ink-soft);font-family:var(--font-body);}
+.bottom-nav button.active{color:var(--maroon);}
+.bottom-nav svg{width:22px;height:22px;}
+.bottom-nav span{font-size:11px;font-weight:600;}
+
+/* misc */
+.flex-between{display:flex;align-items:center;justify-content:space-between;}
+.mt8{margin-top:8px;}
+.mt14{margin-top:14px;}
+.small-muted{font-size:11.5px;color:var(--ink-soft);}
+
+@media print{
+  body *{visibility:hidden;}
+  #print-area, #print-area *{visibility:visible;}
+  #print-area{position:absolute;top:0;left:0;width:100%;padding:20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= AUTH SCREEN ================= -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="eyebrow2">Dana Punia</div>
+    <h1>Masuk ke Aplikasi</h1>
+    <div class="sub2" id="authSubText">Memuat…</div>
+
+    <div class="auth-error" id="authError"></div>
+
+    <!-- setup admin (hanya muncul saat belum ada admin) -->
+    <div id="authSetupForm" class="hidden">
+      <label for="setupUser">Username admin</label>
+      <input type="text" id="setupUser" placeholder="contoh: admin">
+      <label for="setupPass">Kata sandi</label>
+      <input type="password" id="setupPass" placeholder="minimal 6 karakter">
+      <label for="setupPass2">Ulangi kata sandi</label>
+      <input type="password" id="setupPass2" placeholder="ulangi kata sandi">
+      <button class="btn btn-primary mt14" id="setupSubmitBtn">Buat akun admin</button>
+      <div class="hint mt8">Akun ini akan menjadi admin utama. Admin nanti bisa menambah akun staf dari menu Akun.</div>
+    </div>
+
+    <!-- login -->
+    <div id="authLoginForm" class="hidden">
+      <label for="loginUser">Username</label>
+      <input type="text" id="loginUser" placeholder="username">
+      <label for="loginPass">Kata sandi</label>
+      <input type="password" id="loginPass" placeholder="kata sandi">
+      <button class="btn btn-primary mt14" id="loginSubmitBtn">Masuk</button>
+    </div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+
+  <div class="app-header">
+    <div class="header-actions">
+      <span class="role-badge" id="roleBadge">-</span>
+      <div class="row-btns">
+        <button class="edit-name-btn hidden" id="editNameBtn">Ubah nama</button>
+        <button class="logout-btn" id="logoutBtn">Keluar</button>
+      </div>
+    </div>
+    <div class="eyebrow">Pencatatan Dana Punia</div>
+    <h1 id="viharaTitle">Vihara</h1>
+    <div class="sub" id="viharaSub">Scan &middot; catat &middot; laporan</div>
+  </div>
+
+  <!-- ================= SCAN VIEW ================= -->
+  <div class="view" id="view-scan">
+
+    <div id="scanIdleWrap">
+      <div class="cam-primary-card">
+        <div class="section-label">Langkah 1 — scan dengan kamera HP</div>
+        <button class="btn btn-gold" id="camToggleBtn">Aktifkan kamera</button>
+        <div id="camWrap" class="hidden mt14">
+          <div class="cam-wrap">
+            <video id="camVideo" playsinline autoplay muted></video>
+            <div class="cam-frame"></div>
+            <div class="cam-status" id="camStatus">Arahkan kamera ke kode QR pada kartu donatur…</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="camStopBtn" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.4);">Matikan kamera</button>
+        </div>
+        <div class="hint-light">Posisikan kode QR di dalam kotak kuning. Kode otomatis terbaca, tidak perlu tombol foto.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-label">Atau pakai alat scan / ketik manual</div>
+        <div class="scan-input-wrap">
+          <input type="text" id="scanInput" placeholder="Scan barcode dengan alat, atau ketik ID lalu Enter" autocomplete="off">
+        </div>
+        <div class="hint">Alat scan barcode USB/Bluetooth otomatis "mengetik" kode ke kolom ini lalu Enter — tidak perlu kamera.</div>
+        <button class="btn btn-primary mt14" id="searchBtn">Cari donatur</button>
+      </div>
+
+      <div id="notFoundBox"></div>
+    </div>
+
+    <div id="donorHitWrap" class="hidden"></div>
+
+  </div>
+
+  <!-- ================= DONATUR VIEW ================= -->
+  <div class="view hidden" id="view-donatur">
+    <div class="card">
+      <div class="section-label">Daftarkan donatur baru</div>
+      <label for="newDonorName">Nama donatur</label>
+      <input type="text" id="newDonorName" placeholder="Contoh: Bapak Susanto Wijaya">
+      <label for="newDonorNote">Catatan (opsional)</label>
+      <input type="text" id="newDonorNote" placeholder="Contoh: keluarga, no. HP, dsb.">
+      <button class="btn btn-primary mt14" id="addDonorBtn">Buat kode &amp; simpan</button>
+    </div>
+
+    <div class="card" id="donorAdminSection">
+      <div class="flex-between">
+        <div class="section-label" style="margin-bottom:0;">Semua donatur (<span id="donorCount">0</span>)</div>
+        <button class="btn btn-gold btn-sm" id="printAllBtn">Cetak semua kode</button>
+      </div>
+      <div class="search-box mt14">
+        <input type="text" id="donorSearch" placeholder="Cari nama atau ID…">
+      </div>
+      <div id="donorList"></div>
+    </div>
+  </div>
+
+  <!-- ================= LAPORAN VIEW (admin) ================= -->
+  <div class="view hidden" id="view-laporan">
+    <div class="card">
+      <div class="toggle-group">
+        <button id="tgHarian" class="active">Per Tanggal</button>
+        <button id="tgBulanan">Per Bulan</button>
+      </div>
+
+      <div id="harianControls">
+        <input type="date" id="dateFilter">
+      </div>
+      <div id="bulananControls" class="hidden">
+        <input type="month" id="monthFilter">
+      </div>
+
+      <div class="stat-grid mt14" id="statGrid"></div>
+
+      <div class="flex-between mt8">
+        <div class="section-label" style="margin-bottom:0;">Rincian transaksi</div>
+        <button class="btn btn-ghost btn-sm" id="exportCsvBtn">Unduh CSV</button>
+      </div>
+      <div id="reportTableWrap" class="mt8"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Total sepanjang waktu</div>
+      <div class="stat-grid" id="allTimeStatGrid"></div>
+    </div>
+  </div>
+
+  <!-- ================= AKUN VIEW (admin) ================= -->
+  <div class="view hidden" id="view-akun">
+    <div class="card">
+      <div class="section-label">Ubah kata sandi admin</div>
+      <label for="newAdminPass">Kata sandi baru</label>
+      <input type="password" id="newAdminPass" placeholder="minimal 6 karakter">
+      <label for="newAdminPass2">Ulangi kata sandi baru</label>
+      <input type="password" id="newAdminPass2" placeholder="ulangi kata sandi baru">
+      <button class="btn btn-primary mt14" id="changeAdminPassBtn">Simpan kata sandi</button>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Tambah akun staf</div>
+      <label for="staffUser">Username staf</label>
+      <input type="text" id="staffUser" placeholder="contoh: staf1">
+      <label for="staffPass">Kata sandi</label>
+      <input type="password" id="staffPass" placeholder="minimal 6 karakter">
+      <button class="btn btn-primary mt14" id="addStaffBtn">Tambah staf</button>
+      <div class="hint mt8">Staf hanya bisa mendaftarkan umat baru dan mencatat donasi lewat scan. Staf tidak bisa melihat laporan atau daftar lengkap donatur.</div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Daftar akun staf (<span id="staffCount">0</span>)</div>
+      <div id="staffList"></div>
+    </div>
+  </div>
+
+  <!-- ================= NAV ================= -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" data-view="scan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7V5a1 1 0 0 1 1-1h2M4 17v2a1 1 0 0 0 1 1h2M20 7V5a1 1 0 0 0-1-1h-2M20 17v2a1 1 0 0 1-1 1h-2M4 12h16" stroke-linecap="round"/></svg>
+      <span>Scan</span>
+    </button>
+    <button class="nav-btn" data-view="donatur">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2" stroke-linecap="round"/></svg>
+      <span>Donatur</span>
+    </button>
+    <button class="nav-btn admin-only hidden" data-view="laporan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 19V9M12 19V5M19 19v-7" stroke-linecap="round"/></svg>
+      <span>Laporan</span>
+    </button>
+    <button class="nav-btn admin-only hidden" data-view="akun">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M4 12a8 8 0 0 1 .3-2.2l-1.6-1.3 1.6-2.8 1.9.6a8 8 0 0 1 1.9-1.1L8.4 3h3.2l.3 2.2a8 8 0 0 1 1.9 1.1l1.9-.6 1.6 2.8-1.6 1.3a8 8 0 0 1 0 4.4l1.6 1.3-1.6 2.8-1.9-.6a8 8 0 0 1-1.9 1.1L11.6 21H8.4l-.3-2.2a8 8 0 0 1-1.9-1.1l-1.9.6-1.6-2.8 1.6-1.3A8 8 0 0 1 4 12Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Akun</span>
+    </button>
+  </div>
+</div>
+
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+<div id="print-area" style="display:none;"></div>
+
+<script>
+(function(){
+
+"use strict";
+
+/* ============== STATE ============== */
+const state = { donors: [], transactions: [], settings: { viharaName: "Vihara" } };
+let camStream = null, camScanning = false, currentDonor = null, reportMode = "harian";
+let currentUser = null; // { username, role } — in-memory only, tidak disimpan permanen
+
+/* ============== STORAGE HELPERS ============== */
+async function storeGet(key){
+  try{
+    const r = await window.storage.get(key, true);
+    return r ? r.value : null;
+  }catch(e){ return null; }
+}
+async function storeSet(key, value){
+  try{ return await window.storage.set(key, value, true); }
+  catch(e){ console.error("Gagal simpan", key, e); return null; }
+}
+async function storeList(prefix){
+  try{
+    const r = await window.storage.list(prefix, true);
+    return (r && r.keys) ? r.keys : [];
+  }catch(e){ return []; }
+}
+
+/* ============== AUTH: HASHING ============== */
+async function sha256(text){
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest("SHA-256", enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+/* ============== AUTH: ADMIN / STAFF ACCOUNTS ============== */
+async function getAdminAccount(){
+  const raw = await storeGet("admin_account");
+  return raw ? JSON.parse(raw) : null;
+}
+async function getStaffList(){
+  const raw = await storeGet("staff_accounts");
+  return raw ? JSON.parse(raw) : [];
+}
+async function saveStaffList(list){
+  await storeSet("staff_accounts", JSON.stringify(list));
+}
+async function createAdminAccount(username, password){
+  const account = { username, hash: await sha256(password), createdAt: new Date().toISOString() };
+  await storeSet("admin_account", JSON.stringify(account));
+  return account;
+}
+async function changeAdminPassword(newPassword){
+  const admin = await getAdminAccount();
+  if(!admin) return;
+  admin.hash = await sha256(newPassword);
+  await storeSet("admin_account", JSON.stringify(admin));
+}
+async function addStaffAccount(username, password){
+  const list = await getStaffList();
+  if(list.some(s => s.username.toLowerCase() === username.toLowerCase())){
+    throw new Error("Username staf sudah dipakai");
+  }
+  list.push({ username, hash: await sha256(password), createdAt: new Date().toISOString() });
+  await saveStaffList(list);
+}
+async function removeStaffAccount(username){
+  let list = await getStaffList();
+  list = list.filter(s => s.username.toLowerCase() !== username.toLowerCase());
+  await saveStaffList(list);
+}
+async function attemptLogin(username, password){
+  const hash = await sha256(password);
+  const admin = await getAdminAccount();
+  if(admin && admin.username.toLowerCase() === username.toLowerCase() && admin.hash === hash){
+    return { username: admin.username, role: "admin" };
+  }
+  const staffList = await getStaffList();
+  const match = staffList.find(s => s.username.toLowerCase() === username.toLowerCase() && s.hash === hash);
+  if(match) return { username: match.username, role: "staff" };
+  return null;
+}
+
+/* ============== AUTH: UI FLOW ============== */
+const authError = document.getElementById("authError");
+function showAuthError(msg){
+  authError.textContent = msg;
+  authError.style.display = "block";
+}
+function clearAuthError(){ authError.style.display = "none"; }
+
+async function initAuth(){
+  const admin = await getAdminAccount();
+  if(!admin){
+    document.getElementById("authSubText").textContent = "Belum ada admin. Buat akun admin utama dulu.";
+    document.getElementById("authSetupForm").classList.remove("hidden");
+    document.getElementById("authLoginForm").classList.add("hidden");
+  }else{
+    document.getElementById("authSubText").textContent = "Masuk dengan akun admin atau staf.";
+    document.getElementById("authSetupForm").classList.add("hidden");
+    document.getElementById("authLoginForm").classList.remove("hidden");
+  }
+}
+
+document.getElementById("setupSubmitBtn").addEventListener("click", async () => {
+  clearAuthError();
+  const u = document.getElementById("setupUser").value.trim();
+  const p = document.getElementById("setupPass").value;
+  const p2 = document.getElementById("setupPass2").value;
+  if(!u){ showAuthError("Username tidak boleh kosong"); return; }
+  if(p.length < 6){ showAuthError("Kata sandi minimal 6 karakter"); return; }
+  if(p !== p2){ showAuthError("Konfirmasi kata sandi tidak sama"); return; }
+  await createAdminAccount(u, p);
+  currentUser = { username: u, role: "admin" };
+  enterApp();
+});
+
+document.getElementById("loginSubmitBtn").addEventListener("click", async () => {
+  clearAuthError();
+  const u = document.getElementById("loginUser").value.trim();
+  const p = document.getElementById("loginPass").value;
+  if(!u || !p){ showAuthError("Isi username dan kata sandi"); return; }
+  const result = await attemptLogin(u, p);
+  if(!result){ showAuthError("Username atau kata sandi salah"); return; }
+  currentUser = result;
+  enterApp();
+});
+["loginUser","loginPass"].forEach(id => {
+  document.getElementById(id).addEventListener("keydown", e => {
+    if(e.key === "Enter") document.getElementById("loginSubmitBtn").click();
+  });
+});
+["setupUser","setupPass","setupPass2"].forEach(id => {
+  document.getElementById(id).addEventListener("keydown", e => {
+    if(e.key === "Enter") document.getElementById("setupSubmitBtn").click();
+  });
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  stopCamera();
+  currentUser = null;
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("authScreen").classList.remove("hidden");
+  document.getElementById("loginUser").value = "";
+  document.getElementById("loginPass").value = "";
+  clearAuthError();
+  initAuth();
+});
+
+function applyRolePermissions(){
+  const isAdmin = currentUser.role === "admin";
+  document.querySelectorAll(".admin-only").forEach(el => el.classList.toggle("hidden", !isAdmin));
+  document.getElementById("donorAdminSection").classList.toggle("hidden", !isAdmin);
+  document.getElementById("editNameBtn").classList.toggle("hidden", !isAdmin);
+  document.getElementById("roleBadge").textContent = currentUser.username + " · " + (isAdmin ? "Admin" : "Staf");
+  // jika staf sedang berada di tampilan yang bukan haknya, kembalikan ke Scan
+  if(!isAdmin){
+    switchView("scan");
+  }
+}
+
+function enterApp(){
+  document.getElementById("authScreen").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  applyRolePermissions();
+  loadAll();
+}
+
+/* ============== DATA LOADING ============== */
+async function loadAll(){
+  const [donorsRaw, settingsRaw] = await Promise.all([loadDonors(), storeGet("settings")]);
+  state.donors = donorsRaw;
+  if(settingsRaw){ try{ state.settings = JSON.parse(settingsRaw); }catch(e){} }
+
+  const txKeys = await storeList("tx:");
+  const txVals = await Promise.all(txKeys.map(k => storeGet(k)));
+  state.transactions = txVals.filter(Boolean).map(v => { try{ return JSON.parse(v); }catch(e){ return null; } }).filter(Boolean);
+  state.transactions.sort((a,b) => (b.timestamp||"").localeCompare(a.timestamp||""));
+
+  renderHeader();
+  renderDonorList();
+  renderReport();
+}
+async function loadDonors(){
+  const raw = await storeGet("donors");
+  if(!raw) return [];
+  try{ return JSON.parse(raw); }catch(e){ return []; }
+}
+async function saveDonors(){
+  await storeSet("donors", JSON.stringify(state.donors));
+}
+async function saveTransaction(tx){
+  await storeSet("tx:" + tx.id, JSON.stringify(tx));
+}
+async function saveSettings(){
+  await storeSet("settings", JSON.stringify(state.settings));
+}
+
+/* ============== UTIL ============== */
+function rp(n){ return "Rp " + Number(n||0).toLocaleString("id-ID"); }
+function uid(prefix){
+  return prefix + "-" + Date.now().toString(36).toUpperCase().slice(-5) + Math.random().toString(36).slice(2,5).toUpperCase();
+}
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function nowMonthStr(){ return todayStr().slice(0,7); }
+function escapeHtml(s){
+  return String(s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function toast(msg){
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.textContent = msg;
+  document.getElementById("toastRoot").appendChild(el);
+  setTimeout(()=> el.remove(), 2200);
+}
+
+/* ============== HEADER / SETTINGS ============== */
+function renderHeader(){
+  document.getElementById("viharaTitle").textContent = state.settings.viharaName || "Vihara";
+}
+document.getElementById("editNameBtn").addEventListener("click", async () => {
+  const val = prompt("Nama vihara / tempat ibadah:", state.settings.viharaName || "Vihara");
+  if(val && val.trim()){
+    state.settings.viharaName = val.trim();
+    renderHeader();
+    await saveSettings();
+  }
+});
+
+/* ============== NAVIGATION ============== */
+const views = ["scan","donatur","laporan","akun"];
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => switchView(btn.dataset.view));
+});
+function switchView(name){
+  if(currentUser && currentUser.role !== "admin" && (name === "laporan" || name === "akun")){
+    name = "scan";
+  }
+  views.forEach(v => {
+    document.getElementById("view-"+v).classList.toggle("hidden", v !== name);
+  });
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+  if(name !== "scan") stopCamera();
+  if(name === "scan"){ resetScanUI(); }
+  if(name === "laporan"){ renderReport(); }
+  if(name === "donatur"){ renderDonorList(); }
+  if(name === "akun"){ renderAkunView(); }
+}
+
+/* ============== DONOR MANAGEMENT ============== */
+document.getElementById("addDonorBtn").addEventListener("click", async () => {
+  const nameEl = document.getElementById("newDonorName");
+  const noteEl = document.getElementById("newDonorNote");
+  const name = nameEl.value.trim();
+  if(!name){ toast("Nama donatur wajib diisi"); nameEl.focus(); return; }
+  const donor = { id: uid("VH"), name, note: noteEl.value.trim(), createdAt: new Date().toISOString(), createdBy: currentUser.username };
+  state.donors.unshift(donor);
+  await saveDonors();
+  nameEl.value = ""; noteEl.value = "";
+  renderDonorList();
+  toast("Donatur \"" + name + "\" tersimpan");
+  openQrModal(donor);
+});
+
+document.getElementById("donorSearch").addEventListener("input", renderDonorList);
+
+function filteredDonors(){
+  const q = document.getElementById("donorSearch").value.trim().toLowerCase();
+  if(!q) return state.donors;
+  return state.donors.filter(d => d.name.toLowerCase().includes(q) || d.id.toLowerCase().includes(q));
+}
+
+function renderDonorList(){
+  document.getElementById("donorCount").textContent = state.donors.length;
+  if(currentUser && currentUser.role !== "admin") return; // staf tidak melihat daftar lengkap
+  const wrap = document.getElementById("donorList");
+  const list = filteredDonors();
+  if(list.length === 0){
+    wrap.innerHTML = '<div class="empty-state"><div class="glyph">*</div>Belum ada donatur. Tambahkan lewat form di atas.</div>';
+    return;
+  }
+  wrap.innerHTML = list.map(d => `
+    <div class="donor-row">
+      <div class="qmini"><img data-qr-mini="${d.id}" alt="QR"></div>
+      <div class="donor-info">
+        <div class="n">${escapeHtml(d.name)}</div>
+        <div class="i">${escapeHtml(d.id)}${d.note ? " · " + escapeHtml(d.note) : ""}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" data-view-qr="${d.id}">Lihat kode</button>
+    </div>
+  `).join("");
+
+  list.forEach(d => {
+    const holder = document.createElement("div");
+    new QRCode(holder, { text: d.id, width: 44, height: 44, colorDark: "#4A1826", colorLight: "#ffffff" });
+    setTimeout(() => {
+      const img = holder.querySelector("img") || holder.querySelector("canvas");
+      const target = wrap.querySelector(`img[data-qr-mini="${d.id}"]`);
+      if(img && target){
+        if(img.tagName === "CANVAS") target.src = img.toDataURL();
+        else target.src = img.src;
+      }
+    }, 30);
+  });
+
+  wrap.querySelectorAll("[data-view-qr]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const d = state.donors.find(x => x.id === btn.dataset.viewQr);
+      if(d) openQrModal(d);
+    });
+  });
+}
+
+function openQrModal(donor){
+  const root = document.getElementById("modalRoot");
+  root.innerHTML = `
+    <div class="modal-overlay" id="qrOverlay">
+      <div class="modal-box" style="text-align:center;">
+        <div class="print-card" id="modalCardTarget">
+          <div class="pname">${escapeHtml(donor.name)}</div>
+          <div class="pid">${escapeHtml(donor.id)}</div>
+          <svg id="modalBarcode"></svg>
+          <div class="qrbox" id="modalQr"></div>
+        </div>
+        <div class="btn-row mt14">
+          <button class="btn btn-ghost" id="qrCloseBtn">Tutup</button>
+          <button class="btn btn-primary" id="qrPrintBtn">Cetak kartu</button>
+        </div>
+      </div>
+    </div>
+  `;
+  new QRCode(document.getElementById("modalQr"), { text: donor.id, width: 150, height: 150, colorDark: "#4A1826", colorLight: "#ffffff" });
+  try{ JsBarcode("#modalBarcode", donor.id, { height: 40, width: 1.6, fontSize: 11, margin: 4 }); }catch(e){}
+
+  document.getElementById("qrCloseBtn").addEventListener("click", () => root.innerHTML = "");
+  document.getElementById("qrOverlay").addEventListener("click", (e) => { if(e.target.id === "qrOverlay") root.innerHTML = ""; });
+  document.getElementById("qrPrintBtn").addEventListener("click", () => printCards([donor]));
+}
+
+function printCards(donorArr){
+  const area = document.getElementById("print-area");
+  area.innerHTML = `<div class="print-grid">${donorArr.map(d => `
+    <div class="print-card">
+      <div class="pname">${escapeHtml(d.name)}</div>
+      <div class="pid">${escapeHtml(d.id)}</div>
+      <svg id="pb-${d.id}"></svg>
+      <div class="qrbox" id="pq-${d.id}"></div>
+    </div>
+  `).join("")}</div>`;
+  area.style.display = "block";
+  donorArr.forEach(d => {
+    new QRCode(document.getElementById("pq-" + d.id), { text: d.id, width: 120, height: 120, colorDark: "#4A1826", colorLight: "#ffffff" });
+    try{ JsBarcode("#pb-" + d.id, d.id, { height: 35, width: 1.5, fontSize: 10, margin: 4 }); }catch(e){}
+  });
+  setTimeout(() => {
+    window.print();
+    area.style.display = "none";
+  }, 200);
+}
+
+document.getElementById("printAllBtn").addEventListener("click", () => {
+  if(state.donors.length === 0){ toast("Belum ada donatur untuk dicetak"); return; }
+  printCards(state.donors);
+});
+
+/* ============== SCAN & LOOKUP ============== */
+const scanInput = document.getElementById("scanInput");
+scanInput.addEventListener("keydown", (e) => { if(e.key === "Enter"){ e.preventDefault(); doLookup(); } });
+document.getElementById("searchBtn").addEventListener("click", doLookup);
+
+function resetScanUI(){
+  currentDonor = null;
+  document.getElementById("scanIdleWrap").classList.remove("hidden");
+  document.getElementById("donorHitWrap").classList.add("hidden");
+  document.getElementById("notFoundBox").innerHTML = "";
+  scanInput.value = "";
+  setTimeout(() => scanInput.focus(), 60);
+}
+
+function doLookup(){
+  const code = scanInput.value.trim();
+  if(!code) return;
+  const donor = state.donors.find(d => d.id.toLowerCase() === code.toLowerCase())
+    || state.donors.find(d => d.name.toLowerCase() === code.toLowerCase());
+  if(!donor){
+    document.getElementById("notFoundBox").innerHTML = `<div class="error-box">Donatur dengan kode "<strong>${escapeHtml(code)}</strong>" tidak ditemukan. Periksa kode, atau daftarkan donatur baru di tab Donatur.</div>`;
+    return;
+  }
+  document.getElementById("notFoundBox").innerHTML = "";
+  showDonorHit(donor);
+}
+
+function showDonorHit(donor){
+  currentDonor = donor;
+  stopCamera();
+  document.getElementById("scanIdleWrap").classList.add("hidden");
+  const wrap = document.getElementById("donorHitWrap");
+  wrap.classList.remove("hidden");
+  wrap.innerHTML = `
+    <div class="donor-hit">
+      <div class="lbl">Donatur ditemukan</div>
+      <div class="name">${escapeHtml(donor.name)}</div>
+      <div class="idtag">${escapeHtml(donor.id)}</div>
+    </div>
+    <div class="card">
+      <div class="section-label">Langkah 2 — catat jumlah donasi</div>
+      <label for="amountInput">Jumlah (Rp)</label>
+      <input type="number" id="amountInput" inputmode="numeric" placeholder="contoh: 100000" autofocus>
+      <label for="dateInput">Tanggal</label>
+      <input type="date" id="dateInput" value="${todayStr()}">
+      <label for="noteInput">Catatan (opsional)</label>
+      <input type="text" id="noteInput" placeholder="contoh: dana punia bulanan">
+      <div class="btn-row mt14">
+        <button class="btn btn-ghost" id="cancelHitBtn">Batal</button>
+        <button class="btn btn-primary" id="saveTxBtn">Simpan donasi</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("cancelHitBtn").addEventListener("click", resetScanUI);
+  document.getElementById("saveTxBtn").addEventListener("click", commitTransaction);
+  setTimeout(() => document.getElementById("amountInput").focus(), 80);
+}
+
+async function commitTransaction(){
+  const amountEl = document.getElementById("amountInput");
+  const dateEl = document.getElementById("dateInput");
+  const noteEl = document.getElementById("noteInput");
+  const amount = Number(amountEl.value);
+  if(!amount || amount <= 0){ toast("Isi jumlah donasi yang benar"); amountEl.focus(); return; }
+  const dateStr = dateEl.value || todayStr();
+  const tx = {
+    id: uid("T"),
+    donorId: currentDonor.id,
+    donorName: currentDonor.name,
+    amount,
+    note: noteEl.value.trim(),
+    dateStr,
+    monthStr: dateStr.slice(0,7),
+    timestamp: new Date().toISOString(),
+    recordedBy: currentUser.username
+  };
+  const btn = document.getElementById("saveTxBtn");
+  btn.disabled = true; btn.textContent = "Menyimpan…";
+  await saveTransaction(tx);
+  state.transactions.unshift(tx);
+  toast(`Tersimpan: ${rp(amount)} dari ${currentDonor.name}`);
+  resetScanUI();
+  renderReport();
+}
+
+/* ============== CAMERA SCANNING ============== */
+document.getElementById("camToggleBtn").addEventListener("click", startCamera);
+document.getElementById("camStopBtn").addEventListener("click", stopCamera);
+
+let lastScanAttempt = 0;
+
+async function startCamera(){
+  const camWrap = document.getElementById("camWrap");
+  camWrap.classList.remove("hidden");
+  const statusEl = document.getElementById("camStatus");
+  clearAuthError();
+
+  // Diagnosa dini: konteks tidak aman (bukan https) atau API tidak tersedia
+  if(location.protocol !== "https:" && location.hostname !== "localhost"){
+    statusEl.textContent = "Halaman ini belum dibuka lewat HTTPS, jadi browser memblokir kamera. Buka file ini lewat link https langsung di browser HP (lihat petunjuk di bawah chat).";
+    return;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    statusEl.textContent = "Browser ini tidak mendukung akses kamera di halaman ini. Coba buka langsung lewat Safari (iOS) atau Chrome (Android), bukan di dalam aplikasi lain / pratinjau.";
+    return;
+  }
+
+  statusEl.textContent = "Meminta izin kamera…";
+  const video = document.getElementById("camVideo");
+  video.setAttribute("playsinline", "true");
+  video.setAttribute("webkit-playsinline", "true");
+  video.muted = true;
+
+  const constraintsTry = [
+    { video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+    { video: { facingMode: "environment" }, audio: false },
+    { video: true, audio: false }
+  ];
+
+  let lastErr = null;
+  for(const c of constraintsTry){
+    try{
+      camStream = await navigator.mediaDevices.getUserMedia(c);
+      lastErr = null;
+      break;
+    }catch(e){ lastErr = e; }
+  }
+
+  if(!camStream){
+    const name = lastErr ? lastErr.name : "UnknownError";
+    let msg = "Kamera tidak dapat diakses (" + name + ").";
+    if(name === "NotAllowedError" || name === "SecurityError"){
+      msg = "Izin kamera ditolak/diblokir. Cek pengaturan izin kamera untuk browser ini di HP, atau buka halaman lewat link https langsung (bukan pratinjau dalam aplikasi).";
+    }else if(name === "NotFoundError"){
+      msg = "Tidak ditemukan kamera pada perangkat ini.";
+    }else if(name === "NotReadableError"){
+      msg = "Kamera sedang dipakai aplikasi lain. Tutup aplikasi kamera/video call lain lalu coba lagi.";
+    }else if(name === "OverconstrainedError"){
+      msg = "Kamera tidak mendukung pengaturan yang diminta.";
+    }
+    statusEl.textContent = msg + " Gunakan kolom ketik / alat scan di bawah sebagai alternatif.";
+    console.warn("Camera error", lastErr);
+    return;
+  }
+
+  video.srcObject = camStream;
+  try{ await video.play(); }catch(e){ console.warn("video.play() gagal", e); }
+  statusEl.textContent = "Arahkan kamera ke kode QR pada kartu donatur…";
+  camScanning = true;
+  requestAnimationFrame(scanLoop);
+}
+function stopCamera(){
+  camScanning = false;
+  if(camStream){
+    camStream.getTracks().forEach(t => t.stop());
+    camStream = null;
+  }
+  document.getElementById("camWrap").classList.add("hidden");
+}
+function scanLoop(ts){
+  if(!camScanning) return;
+  if(!lastScanAttempt || ts - lastScanAttempt > 120){
+    lastScanAttempt = ts;
+    const video = document.getElementById("camVideo");
+    if(video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0){
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      try{
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
+        if(code && code.data){
+          document.getElementById("camStatus").textContent = "Kode terbaca!";
+          scanInput.value = code.data;
+          doLookup();
+          return;
+        }
+      }catch(e){}
+    }
+  }
+  requestAnimationFrame(scanLoop);
+}
+
+/* ============== LAPORAN / REPORTS ============== */
+document.getElementById("tgHarian").addEventListener("click", () => setReportMode("harian"));
+document.getElementById("tgBulanan").addEventListener("click", () => setReportMode("bulanan"));
+document.getElementById("dateFilter").addEventListener("change", renderReport);
+document.getElementById("monthFilter").addEventListener("change", renderReport);
+document.getElementById("dateFilter").value = todayStr();
+document.getElementById("monthFilter").value = nowMonthStr();
+
+function setReportMode(mode){
+  reportMode = mode;
+  document.getElementById("tgHarian").classList.toggle("active", mode === "harian");
+  document.getElementById("tgBulanan").classList.toggle("active", mode === "bulanan");
+  document.getElementById("harianControls").classList.toggle("hidden", mode !== "harian");
+  document.getElementById("bulananControls").classList.toggle("hidden", mode !== "bulanan");
+  renderReport();
+}
+
+function currentFilteredTx(){
+  if(reportMode === "harian"){
+    const d = document.getElementById("dateFilter").value || todayStr();
+    return { rows: state.transactions.filter(t => t.dateStr === d), label: d };
+  }else{
+    const m = document.getElementById("monthFilter").value || nowMonthStr();
+    return { rows: state.transactions.filter(t => t.monthStr === m), label: m };
+  }
+}
+
+function renderReport(){
+  if(!currentUser || currentUser.role !== "admin") return;
+  const { rows } = currentFilteredTx();
+  const total = rows.reduce((s,t) => s + t.amount, 0);
+  const uniqueDonors = new Set(rows.map(t => t.donorId)).size;
+
+  document.getElementById("statGrid").innerHTML = `
+    <div class="stat"><div class="v">${rp(total)}</div><div class="l">Total dana</div></div>
+    <div class="stat"><div class="v">${rows.length}</div><div class="l">Transaksi</div></div>
+    <div class="stat"><div class="v">${uniqueDonors}</div><div class="l">Donatur unik</div></div>
+    <div class="stat"><div class="v">${rows.length ? rp(Math.round(total/rows.length)) : rp(0)}</div><div class="l">Rata-rata</div></div>
+  `;
+
+  const tableWrap = document.getElementById("reportTableWrap");
+  if(rows.length === 0){
+    tableWrap.innerHTML = '<div class="empty-state"><div class="glyph">*</div>Belum ada donasi pada periode ini.</div>';
+  }else{
+    const sorted = [...rows].sort((a,b) => (b.timestamp||"").localeCompare(a.timestamp||""));
+    tableWrap.innerHTML = `
+      <table>
+        <thead><tr><th>Tanggal</th><th>Donatur</th><th style="text-align:right;">Jumlah</th></tr></thead>
+        <tbody>
+          ${sorted.map(t => `
+            <tr>
+              <td>${t.dateStr}${t.note ? '<br><span class="small-muted">'+escapeHtml(t.note)+'</span>' : ""}</td>
+              <td>${escapeHtml(t.donorName)}</td>
+              <td class="amt">${rp(t.amount)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  const allTotal = state.transactions.reduce((s,t) => s + t.amount, 0);
+  document.getElementById("allTimeStatGrid").innerHTML = `
+    <div class="stat"><div class="v">${rp(allTotal)}</div><div class="l">Total keseluruhan</div></div>
+    <div class="stat"><div class="v">${state.donors.length}</div><div class="l">Donatur terdaftar</div></div>
+  `;
+}
+
+document.getElementById("exportCsvBtn").addEventListener("click", () => {
+  const { rows, label } = currentFilteredTx();
+  if(rows.length === 0){ toast("Tidak ada data untuk diunduh"); return; }
+  const header = ["Tanggal","Nama Donatur","ID Donatur","Jumlah","Catatan"];
+  const lines = [header.join(",")].concat(
+    rows.map(t => [t.dateStr, `"${(t.donorName||"").replace(/"/g,'""')}"`, t.donorId, t.amount, `"${(t.note||"").replace(/"/g,'""')}"`].join(","))
+  );
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `laporan-donasi-${label}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+});
+
+/* ============== AKUN VIEW (admin: ganti password, kelola staf) ============== */
+document.getElementById("changeAdminPassBtn").addEventListener("click", async () => {
+  const p1 = document.getElementById("newAdminPass").value;
+  const p2 = document.getElementById("newAdminPass2").value;
+  if(p1.length < 6){ toast("Kata sandi minimal 6 karakter"); return; }
+  if(p1 !== p2){ toast("Konfirmasi kata sandi tidak sama"); return; }
+  await changeAdminPassword(p1);
+  document.getElementById("newAdminPass").value = "";
+  document.getElementById("newAdminPass2").value = "";
+  toast("Kata sandi admin berhasil diubah");
+});
+
+document.getElementById("addStaffBtn").addEventListener("click", async () => {
+  const uEl = document.getElementById("staffUser");
+  const pEl = document.getElementById("staffPass");
+  const u = uEl.value.trim();
+  const p = pEl.value;
+  if(!u){ toast("Username staf wajib diisi"); return; }
+  if(p.length < 6){ toast("Kata sandi minimal 6 karakter"); return; }
+  try{
+    await addStaffAccount(u, p);
+    uEl.value = ""; pEl.value = "";
+    toast("Akun staf \"" + u + "\" ditambahkan");
+    renderAkunView();
+  }catch(e){
+    toast(e.message || "Gagal menambah staf");
+  }
+});
+
+async function renderAkunView(){
+  if(!currentUser || currentUser.role !== "admin") return;
+  const list = await getStaffList();
+  document.getElementById("staffCount").textContent = list.length;
+  const wrap = document.getElementById("staffList");
+  if(list.length === 0){
+    wrap.innerHTML = '<div class="empty-state"><div class="glyph">*</div>Belum ada akun staf.</div>';
+    return;
+  }
+  wrap.innerHTML = list.map(s => `
+    <div class="staff-row">
+      <div>
+        <div class="sn">${escapeHtml(s.username)}</div>
+        <div class="sd">Dibuat ${new Date(s.createdAt).toLocaleDateString("id-ID")}</div>
+      </div>
+      <button class="btn btn-danger btn-sm" data-remove-staff="${escapeHtml(s.username)}">Hapus</button>
+    </div>
+  `).join("");
+  wrap.querySelectorAll("[data-remove-staff]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if(!confirm(`Hapus akun staf "${btn.dataset.removeStaff}"?`)) return;
+      await removeStaffAccount(btn.dataset.removeStaff);
+      renderAkunView();
+      toast("Akun staf dihapus");
+    });
+  });
+}
+
+/* ============== INIT ============== */
+initAuth();
+
+})();
+</script>
+</body>
+</html>
